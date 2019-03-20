@@ -3,7 +3,7 @@ import pathlib
 
 class SIOconfiguration:
     def __init__(self):
-        self.mdm_ip = '10.234.210.22'
+        self.mdm_ip = '10.139.218.26'
         self.admin_username = 'admin'
         self.admin_password = 'Scaleio123'
         self.server_user = 'root'

@@ -3,7 +3,7 @@ import os
 from sys import platform
 import re
 from datetime import datetime
-from configuration import Integration
+from modules.configuration import Integration
 
 
 def logging_config(integration_config: Integration, logging_mode: str= 'INFO', log_to_file: bool=False, executable_path: str = __file__) -> logging:
