@@ -8,6 +8,7 @@ from modules.SIOSCLI.scli_exeptions import BadArgumentsException
 class SCLI:
     def __init__(self, sio_config: configuration.SIOconfiguration):
         self.logger = logging.getLogger()
+        logging.getLogger("paramiko").setLevel(logging.WARNING)
         self.sio_config = sio_config
         self.ssh = paramiko.SSHClient()
         self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
