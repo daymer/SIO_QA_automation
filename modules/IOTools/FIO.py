@@ -5,6 +5,7 @@ import logging
 
 class FIO:
     def __init__(self, server_ip: ipaddress):
+        logging.getLogger("paramiko").setLevel(logging.WARNING)
         self.server_ip = str(server_ip)
         self.logger = logging.getLogger()
         self.ssh = paramiko.SSHClient()
@@ -23,8 +24,9 @@ class FIO:
                           'direct',
                           'size',
                           'numjobs',
-                          'filename']
-        cmd_to_execute = 'fio --name=f_thread --thread'
+                          'filename',
+                          'name']
+        cmd_to_execute = 'fio --thread'
 
         if kwargs is not None:
             for key, value in kwargs.items():
