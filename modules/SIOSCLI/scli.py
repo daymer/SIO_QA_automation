@@ -6,13 +6,11 @@ from modules.SIOSCLI.scli_exeptions import BadArgumentsException
 
 
 class SCLI:
-    def __init__(self, sio_config: configuration.SIOconfiguration):
+    def __init__(self, sio_config: configuration.SIOconfiguration, ssh_handler: paramiko):
         self.logger = logging.getLogger()
         logging.getLogger("paramiko").setLevel(logging.WARNING)
         self.sio_config = sio_config
-        self.ssh = paramiko.SSHClient()
-        self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        self.ssh.connect(self.sio_config.mdm_ip, username=self.sio_config.server_user, password=self.sio_config.server_password)
+        self.ssh = ssh_handler
         self.infra = SIOInfraHandler('NONE')
 
     def login(self, username: str = 'admin')->bool:
@@ -24,6 +22,8 @@ class SCLI:
                 self.logger.info(str(result))
                 return True
             else:
+                error = ssh_stderr.read().decode('ascii').rstrip()
+                self.logger.debug(error)
                 raise Exception
 
     def logout(self)->bool:
@@ -144,6 +144,7 @@ class SCLI:
             if 'The volume is not mapped to SDC' in error:
                 return True
             else:
+                # Error: MDM failed command.  Status: Invalid session. Please login and try again.
                 raise Exception
 
     def map_volume_to_sdc(self, volume_id: str=None, volume_name: str=None, sdc_id: str=None, sdc_name: str=None,
@@ -181,6 +182,7 @@ class SCLI:
         else:
             error = ssh_stderr.read().decode('ascii').rstrip()
             self.logger.error(error)
+            #Error: MDM failed command.  Status: Could not find the SDC
             raise Exception
 
     def query_user(self, username: str='admin', silent_mode: bool = True):

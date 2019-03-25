@@ -72,10 +72,10 @@ class NodeGlobal(object):  # TODO: add args validation
                 data_nic_b = ipaddress.ip_address(data_nic_b[1])
                 return verified_nic_list, data_nic_a, data_nic_b
             except ValueError:
-                raise Exception('Unable to get A abd D data nics from node ' + str(
+                raise Exception('Unable to get A abd B data nics from node ' + str(
                     self.node_ip_m))  # TODO: hardware network misconfig exeptions
         else:
-            raise Exception('Unable to get A abd D data nics from node ' + str(
+            raise Exception('Unable to get A abd B data nics from node ' + str(
                 self.node_ip_m))  # TODO: hardware network misconfig exeptions
 
 

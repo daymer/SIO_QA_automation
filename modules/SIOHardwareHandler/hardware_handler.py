@@ -34,4 +34,4 @@ class SIONodeHandler(object):  # TODO: add parallelism into initialization
             temp_mdm = MDM(**each_mdm)
             self.MDM_list.append(temp_mdm)
         for each_mdm_host in self.MDM_list:
-            self.known_hosts[each_mdm_host.hostname] = [each_mdm_host]
+            self.known_hosts[each_mdm_host.hostname] = each_mdm_host

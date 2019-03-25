@@ -4,13 +4,10 @@ import logging
 
 
 class FIO:
-    def __init__(self, server_ip: ipaddress):
+    def __init__(self, ssh_handle: paramiko):
         logging.getLogger("paramiko").setLevel(logging.WARNING)
-        self.server_ip = str(server_ip)
         self.logger = logging.getLogger()
-        self.ssh = paramiko.SSHClient()
-        self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        self.ssh.connect(str(server_ip), username='root', password='password')
+        self.ssh = ssh_handle
 
     def launch_fio_custom_args(self, **kwargs):
         # Supported args:
