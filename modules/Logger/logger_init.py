@@ -4,10 +4,14 @@ from sys import platform
 import re
 from datetime import datetime
 from modules.configuration import Integration
+import warnings
+
+# Suppressing DeprecationWarnings
+warnings.filterwarnings("ignore")
 
 
 def logging_config(integration_config: Integration, logging_mode: str= 'INFO', log_to_file: bool=False, executable_path: str = __file__) -> logging:
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter('%(asctime)s - %(name)s  - %(levelname)s - %(message)s')
     logger_inst = logging.getLogger()
     logger_inst.setLevel(logging_mode)
     if log_to_file is True:
@@ -38,4 +42,7 @@ def logging_config(integration_config: Integration, logging_mode: str= 'INFO', l
     ch.setLevel(logging_mode)
     ch.setFormatter(formatter)
     logger_inst.addHandler(ch)
+    # Turning off the paramiko.transport DEBUG
+    logging.getLogger("paramiko.transport").setLevel(logging.WARNING)
+    logging.getLogger("NodeGlobal").setLevel(logging.WARNING)
     return logger_inst

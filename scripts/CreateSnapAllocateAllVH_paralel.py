@@ -18,6 +18,7 @@ MainLogger = logger_init.logging_config(integration_config=IntegrationConfigInst
 # Initializing hardware environment
 SIONodeHandler = SIONodeHandler(mdms=[
     {'node_ip': '10.234.210.22',
+     'name': '90',
      'user': 'root',
      'password': 'password'}])
 
