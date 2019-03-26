@@ -26,21 +26,40 @@ class SCLI:
             return {'status': True, 'result': result}
         else:
             error = ssh_stderr.read().decode('ascii').rstrip()
-            self.logger.error(error)
-            return {'status': False, 'result': error}
+            if 'Error: MDM failed command.  Status: Invalid session. Please login and try again.' in error:
+                self.login()
+                ssh_stdin, ssh_stdout, ssh_stderr = ssh_handler_func.exec_command(cmd_to_execute)
+                result = str(ssh_stdout.read().decode('ascii').rstrip())
+                if len(result) > 0:
+                    self.logger.debug(result)
+                    return {'status': True, 'result': result}
+                else:
+                    if len(error) > 0:
+                        self.logger.error(error)
+                    else:
+                        self.logger.error("ssh_execute: empty ssh_stderr")
+                    return {'status': False, 'result': error}
+            else:
+                if len(error) > 0:
+                    self.logger.error(error)
+                else:
+                    self.logger.error("ssh_execute: empty ssh_stderr")
+                return {'status': False, 'result': error}
 
-    def login(self, username: str = 'admin')->bool:
+    def login(self, username: str = 'admin', password: str = 'password')->bool:
         if username == self.sio_config.admin_username:
             cmd_to_execute = 'scli --login --username '+self.sio_config.admin_username+' --password '+self.sio_config.admin_password
-            result = self.execute(cmd_to_execute=cmd_to_execute)
-            if result['status'] is True:
-                # IDENTIFYING RESULTS
-                if result['result'].startswith('Logged in'):
-                    self.logger.info(str(result))
-                    return True
-            elif result['status'] is False:
-                # RAISING ERRORS
-                raise Exception
+        else:
+            cmd_to_execute = 'scli --login --username ' + username + ' --password ' + password
+        result = self.execute(cmd_to_execute=cmd_to_execute)
+        if result['status'] is True:
+            # IDENTIFYING RESULTS
+            if result['result'].startswith('Logged in'):
+                self.logger.info(str(result))
+                return True
+        elif result['status'] is False:
+            # RAISING ERRORS
+            raise Exception
 
     def logout(self)->bool:
         cmd_to_execute = 'scli --logout'
@@ -62,6 +81,15 @@ class SCLI:
             cmd_to_execute += ' --volume_name ' + volume_name
         if volume_id is not None:
             cmd_to_execute += ' --volume_id ' + volume_id
+        result = self.execute(cmd_to_execute=cmd_to_execute)
+        if result['status'] is True:
+            # IDENTIFYING RESULTS
+            return result['result']
+        elif result['status'] is False:
+            raise Exception
+
+    def query_all(self)->str:
+        cmd_to_execute = 'scli --query_all'
         result = self.execute(cmd_to_execute=cmd_to_execute)
         if result['status'] is True:
             # IDENTIFYING RESULTS

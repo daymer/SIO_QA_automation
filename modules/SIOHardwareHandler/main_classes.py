@@ -3,6 +3,9 @@ import ipaddress
 import paramiko
 import logging
 import re
+from modules.SIOSCLI import scli, scli_exeptions
+from modules.configuration import SIOconfiguration
+from modules.SIOHardwareHandler.main_classes_exeptions import WrongRoleSelected
 
 
 class NodeGlobal(object):  # TODO: add args validation
@@ -42,7 +45,10 @@ class NodeGlobal(object):  # TODO: add args validation
             return {'status': True, 'result': result}
         else:
             error = ssh_stderr.read().decode('ascii').rstrip()
-            self.logger.error(error)
+            if len(error) > 0:
+                self.logger.error(error)
+            else:
+                self.logger.error("ssh_execute: empty ssh_stderr")
             return {'status': False, 'result': error}
 
     def log_own_creation(self):
@@ -113,9 +119,16 @@ class NodeGlobal(object):  # TODO: add args validation
 class MDM(NodeGlobal):
     def __init__(self, **kwargs):
         NodeGlobal.__init__(self, **kwargs)
-        self.type = 'mdm'
-        self.installation_package = self.get_mdm_version()
-        self.log_own_creation()
+        try:
+            self.installation_package = self.get_mdm_version()
+            self.type = 'mdm'
+            sio_configuration = SIOconfiguration()
+            self.scli = scli.SCLI(sio_config=sio_configuration, ssh_handler=self.ssh)
+            self.log_own_creation()
+        except WrongRoleSelected as error:
+            self.logger.critical('A wrong type of node was submitted as MDM due to: ' + str(error))
+            self.logger.info('A node ' + str(self.node_ip_m) + 'will be ignored while MDM object creation due to: ' + str(error))
+            self.type = 'junk'
 
     def get_mdm_version(self):
         cmd_to_execute = "rpm -qa | grep -i EMC-ScaleIO-mdm"
@@ -123,8 +136,8 @@ class MDM(NodeGlobal):
         if result['status'] is True:
             return result
         elif result['status'] is False:
-            raise Exception('Unable to get mdm_version via ssh from ' + str(
-                self.node_ip_m))  # TODO: software misconfig exeptions
+            raise WrongRoleSelected('Unable to get mdm_version via ssh',
+                                    ['node ip', str(self.node_ip_m)])
 
 
 class SDS(NodeGlobal):
@@ -140,14 +153,3 @@ class SDC(NodeGlobal):
         self.type = 'sdc'
         self.log_own_creation()
 
-
-'''
-def validate(f,**kwargs):
-    try:
-        if 'node_ip' and 'user' and 'password' in kwargs:
-            return f(**kwargs)
-    except KeyError:
-        return None
-
-@validate(MDM(f))
-'''

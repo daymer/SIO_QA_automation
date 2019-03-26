@@ -16,13 +16,18 @@ MainLogger = logger_init.logging_config(integration_config=IntegrationConfigInst
 
 
 MainLogger.info('Importing a live system based on MDMs')
+# Define at least 1 MDM:
 SIONodeHandler = SIONodeHandler(mdms=[
-    {'node_ip': '10.234.179.90'},
-    {'node_ip': '10.234.179.92',
-     'name': '92',
+
+    {'node_ip': '10.234.177.34'},  # Not a real MDM, will be skipped
+    {'node_ip': '10.234.177.29'},
+    {'node_ip': '10.234.177.32',
+     'name': '32',
      'user': 'root',
      'password': 'password'}
 ])
 
-MDM_90 = SIONodeHandler.known_hosts['92']['mdm']
-MDM_92 = SIONodeHandler.known_hosts['179_90']['mdm']
+MDM_29 = SIONodeHandler.known_hosts['177_29']['mdm']
+
+result = MDM_29.scli.query_all()
+print(result)

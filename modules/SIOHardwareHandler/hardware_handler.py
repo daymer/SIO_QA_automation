@@ -1,9 +1,11 @@
 import ipaddress
 from modules.SIOHardwareHandler.main_classes import MDM
+import logging
 
 
 class SIONodeHandler(object):  # TODO: add parallelism into initialization
     def __init__(self, mdms: list):
+        self.logger = logging.getLogger('SIONodeHandler')
         self.current_primary_mdm = None
         # initialization, stage 1: validate MDMs, add them into MDM_list and known_hosts
         self.MDM_list = []
@@ -44,6 +46,27 @@ class SIONodeHandler(object):  # TODO: add parallelism into initialization
                     # TODO: SIONodeHandler misconfig exeptions
         for each_mdm in unverified_mdms:
             temp_mdm = MDM(**each_mdm)
-            verified_mdms.append(temp_mdm)
-        return verified_mdms
+            if temp_mdm.type is "mdm":
+                verified_mdms.append(temp_mdm)
+            else:
+                self.logger.info('A non-verified MDM was dropped due to it\'s junk type, nothing to do')
+                pass
+        if len(verified_mdms) > 0:
+            return verified_mdms
+        else:
+            raise FailedToInitializeHardwareHandler('Not enough MDMs to initialize Hardware Handler instance', ['issue:', 'less than 1 valid MDM provided'])
+
+
+class HardwareHandlerException(Exception):
+    def __init__(self, message, arguments):
+        """Base class for HardwareHandler exceptions"""
+        Exception.__init__(self, message + ": {0}".format(arguments))
+        self.ErrorMessage = message
+        self.ErrorArguments = arguments
+        pass
+
+
+class FailedToInitializeHardwareHandler(HardwareHandlerException):
+    """Raised when a submitted server has no role requested"""
+    pass
 
