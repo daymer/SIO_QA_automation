@@ -16,6 +16,7 @@ class SIOSystemHandler(object):  # TODO: add parallelism into initialization
         self.MDM_list = self.make_MDM_list(unverified_mdms=mdms)
         for each_mdm_host in self.MDM_list:
             self.known_hosts[each_mdm_host.phys_node] = {each_mdm_host.type: each_mdm_host}
+        self.system = self.MDM_list[0]
 
     def make_MDM_list(self, unverified_mdms: list):
         verified_mdms = []

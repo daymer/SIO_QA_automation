@@ -11,7 +11,6 @@ class SCLI:
         logging.getLogger("paramiko").setLevel(logging.WARNING)
         self.sio_config = sio_config
         self.ssh = ssh_handler
-        self.infra = SIOInfraHandler('NONE')
 
     def execute(self, cmd_to_execute: str, ssh_handle: paramiko = None) -> dict:
         if ssh_handle is None:
@@ -113,6 +112,24 @@ class SCLI:
             return result['result']
         elif result['status'] is False:
             raise Exception
+
+        def to_list(result_func: str):
+            vtree_info_lines = result_func.splitlines()
+            list_volumes = []  # [ID, name, type]
+            for idx, line in enumerate(vtree_info_lines):
+                regex = r"Volume ID:\s([\d\w]{16})\sName:\s([\S]*)"
+                matches = re.finditer(regex, line, re.MULTILINE | re.IGNORECASE)
+                if matches:
+                    for matchNum, match in enumerate(matches, start=1):
+                        volume_id = match.group(1)
+                        volume_name = match.group(2)
+                        if not len(vtree_info_lines) == idx:
+                            next_line = vtree_info_lines[idx + 1]
+                            if 'Provisioning' in next_line:
+                                list_volumes.append([volume_id, volume_name, 'volume'])
+                            elif 'Snapshot' in next_line:
+                                list_volumes.append([volume_id, volume_name, 'snapshot'])
+            return list_volumes
 
     def delete_volume(self, volume_id: str=None, volume_name: str=None)->bool:
         self.unmap_volume_from_sdc(volume_id=volume_id, volume_name=volume_name)
@@ -220,35 +237,5 @@ class SCLI:
             return True
         elif result['status'] is False:
             return False
-
-
-class SIOInfraHandler:
-    def __init__(self, system_id: str = 'NONE'):
-        self.system_id = system_id
-
-
-class SIOInfraGather:
-    def __init__(self, scli_handler: SCLI, sio_infa_handler: SIOInfraHandler):
-        self.scli = scli_handler
-        self.sio_infa_handler = sio_infa_handler
-
-    def get_vtree_list(self, volume_id: str=None, volume_name: str=None, vtree_id: str=None)-> list:
-        vtree_data = self.scli.query_volume_tree(volume_id, volume_name, vtree_id)
-        vtree_info_lines = vtree_data.splitlines()
-        list_volumes = []  # [ID, name, type]
-        for idx, line in enumerate(vtree_info_lines):
-            regex = r"Volume ID:\s([\d\w]{16})\sName:\s([\S]*)"
-            matches = re.finditer(regex, line, re.MULTILINE | re.IGNORECASE)
-            if matches:
-                for matchNum, match in enumerate(matches, start=1):
-                    volume_id = match.group(1)
-                    volume_name = match.group(2)
-                    if not len(vtree_info_lines) == idx:
-                        next_line = vtree_info_lines[idx + 1]
-                        if 'Provisioning' in next_line:
-                            list_volumes.append([volume_id, volume_name, 'volume'])
-                        elif 'Snapshot' in next_line:
-                            list_volumes.append([volume_id, volume_name, 'snapshot'])
-        return list_volumes
 
 

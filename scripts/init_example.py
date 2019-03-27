@@ -20,5 +20,6 @@ SIOSystemHandler = SIOSystemHandler(mdms=[
 for each_PhysNode in SIOSystemHandler.known_hosts:
     print(each_PhysNode.hostname)
 
-print(SIOSystemHandler.MDM_list)
+result = SIOSystemHandler.system.scli.query_volume_tree(volume_name='v1')
+print(result)
 
