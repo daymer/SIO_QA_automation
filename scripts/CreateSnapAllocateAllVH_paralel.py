@@ -1,8 +1,8 @@
 # DEPRECATED
 
 import ipaddress
-from modules.SIOHardwareHandler.main_classes import MDM, SDS, SDC
-from modules.SIOHardwareHandler.SIO_node_handler import SIONodeHandler
+from modules.SIOHardwareHandler.NodeGlobal import MDM, SDS, SDC
+from modules.SIOHardwareHandler.SIOSystemHandler import SIOSystemHandler
 from modules.Logger import logger_init
 from modules import configuration
 from multiprocessing.dummy import Pool as ThreadPool
@@ -18,7 +18,7 @@ MainLogger = logger_init.logging_config(integration_config=IntegrationConfigInst
 
 
 # Initializing hardware environment
-SIONodeHandler = SIONodeHandler(mdms=[
+SIONodeHandler = SIOSystemHandler(mdms=[
     {'node_ip': '10.234.210.22',
      'name': '90',
      'user': 'root',

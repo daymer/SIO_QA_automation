@@ -1,14 +1,7 @@
-import ipaddress
-from modules.SIOHardwareHandler.main_classes import MDM, SDS, SDC
-from modules.SIOHardwareHandler.SIO_node_handler import SIONodeHandler
+from modules.SIOHardwareHandler.PhysNode import PhysNode
+from modules.SIOHardwareHandler.SIOSystemHandler import SIOSystemHandler
 from modules.Logger import logger_init
 from modules import configuration
-from multiprocessing.dummy import Pool as ThreadPool
-from modules.SIOSCLI import scli
-import logging
-import itertools
-from modules.SIOHardwareHandler.DiskTools.disk_tools import get_ready_scini_device_name
-from modules.IOTools.FIO import FIO
 
 SIO_configuration = configuration.SIOconfiguration()
 IntegrationConfigInstance = configuration.Integration()
@@ -17,14 +10,11 @@ MainLogger = logger_init.logging_config(integration_config=IntegrationConfigInst
 
 MainLogger.info('Importing a live system based on MDMs')
 # Define at least 1 MDM:
-SIONodeHandler = SIONodeHandler(mdms=[
+SIONodeHandler = SIOSystemHandler(mdms=[
 
-    {'node_ip': '10.234.177.34'},  # Not a real MDM, will be skipped
-    {'node_ip': '10.234.177.29'},
-    {'node_ip': '10.234.177.32',
-     'name': '32',
-     'user': 'root',
-     'password': 'password'}
+    PhysNode('10.234.177.34'),  # Not a real MDM, will be skipped
+    PhysNode('10.234.177.29'),
+    PhysNode(node_ip='10.234.177.32', pretty_name='32', user='root', password='password')
 ])
 
 MDM_29 = SIONodeHandler.known_hosts['177_29']['mdm']
