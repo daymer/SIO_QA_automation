@@ -15,16 +15,20 @@ class SIOSystemHandler(object):  # TODO: add parallelism into initialization
         # query SIO in oder to get list of all nodes
         self.MDM_list = self.make_MDM_list(unverified_mdms=mdms)
         for each_mdm_host in self.MDM_list:
-            self.known_hosts[each_mdm_host.pretty_name] = {each_mdm_host.type: each_mdm_host}
-        self.system_entry = ''
+            self.known_hosts[each_mdm_host.phys_node] = {each_mdm_host.type: each_mdm_host}
 
     def make_MDM_list(self, unverified_mdms: list):
         verified_mdms = []
         for each_physnode in unverified_mdms:
             if type(each_physnode) is PhysNode:
-                temp_mdm = MDM(each_physnode)
+                if next((x for x in verified_mdms if each_physnode.hostname == x.phys_node.hostname),
+                        None) is None:
+                    temp_mdm = MDM(each_physnode)
+                else:
+                    self.logger.error('A PhysNode with the same hostname was already added as MDM, skipping')
+                    continue
                 if temp_mdm.type is "mdm":
-                    verified_mdms.append(temp_mdm)
+                        verified_mdms.append(temp_mdm)
                 else:
                     self.logger.info('A non-verified MDM was dropped due to it\'s junk type, nothing to do')
                     pass

@@ -10,14 +10,15 @@ MainLogger = logger_init.logging_config(integration_config=IntegrationConfigInst
 
 MainLogger.info('Importing a live system based on MDMs')
 # Define at least 1 MDM:
-SIONodeHandler = SIOSystemHandler(mdms=[
-
-    PhysNode('10.234.177.34'),  # Not a real MDM, will be skipped
-    PhysNode('10.234.177.29'),
+SIOSystemHandler = SIOSystemHandler(mdms=[
+    PhysNode('10.234.177.29'),  # Not a real MDM, will be skipped
+    PhysNode('10.234.177.30'),
     PhysNode(node_ip='10.234.177.32', pretty_name='32', user='root', password='password')
 ])
 
-MDM_29 = SIONodeHandler.known_hosts['177_29']['mdm']
 
-result = MDM_29.scli.query_all()
-print(result)
+for each_PhysNode in SIOSystemHandler.known_hosts:
+    print(each_PhysNode.hostname)
+
+print(SIOSystemHandler.MDM_list)
+

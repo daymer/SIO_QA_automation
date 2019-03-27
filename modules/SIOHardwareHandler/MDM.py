@@ -15,7 +15,8 @@ class MDM(NodeGlobal):
             sio_configuration = SIOconfiguration()
             self.scli = scli.SCLI(sio_config=sio_configuration, ssh_handler=self.ssh)
             self.log_own_creation()
-            self.is_debug = False # TODO: add check
+            self.is_debug = False  # TODO: add check
+            self.phys_node.installed_components['mdm'] = True
         except main_classes_exeptions.WrongRoleSelected as error:
             self.logger.critical('A wrong type of node was submitted as MDM due to: ' + str(error))
             self.logger.info('A node ' + str(self.mgmt_ip) + 'will be ignored while MDM object creation due to: ' + str(error))
