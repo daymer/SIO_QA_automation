@@ -1,3 +1,5 @@
+# DEPRECATED
+
 from modules import configuration
 from modules.SIOSCLI import scli
 

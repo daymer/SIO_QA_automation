@@ -1,3 +1,7 @@
+# DEPRECATED
+
+
+
 from modules import configuration
 from modules.SIOSCLI import scli
 from modules.Logger import logger_init
@@ -15,6 +19,5 @@ SCLI.login()
 volume_base = 'v1'
 for snap_num in range(1, 117):
     SCLI.snapshot_volume(volume_name=volume_base, snapshot_name=volume_base+'_'+str(snap_num))
-    SCLI.m
 
 SCLI.logout()

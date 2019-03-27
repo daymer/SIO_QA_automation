@@ -14,6 +14,7 @@ class SIONodeHandler(object):  # TODO: add parallelism into initialization
         self.MDM_list = self.make_MDM_list(mdms=mdms)
         for each_mdm_host in self.MDM_list:
             self.known_hosts[each_mdm_host.node_name] = {each_mdm_host.type: each_mdm_host}
+        self.system_entry = ''
 
     def make_MDM_list(self, mdms):
         unverified_mdms = []
@@ -57,7 +58,7 @@ class SIONodeHandler(object):  # TODO: add parallelism into initialization
             raise FailedToInitializeHardwareHandler('Not enough MDMs to initialize Hardware Handler instance', ['issue:', 'less than 1 valid MDM provided'])
 
 
-class HardwareHandlerException(Exception):
+class SIONodeHandlerException(Exception):
     def __init__(self, message, arguments):
         """Base class for HardwareHandler exceptions"""
         Exception.__init__(self, message + ": {0}".format(arguments))
@@ -66,7 +67,7 @@ class HardwareHandlerException(Exception):
         pass
 
 
-class FailedToInitializeHardwareHandler(HardwareHandlerException):
+class FailedToInitializeHardwareHandler(SIONodeHandlerException):
     """Raised when a submitted server has no role requested"""
     pass
 

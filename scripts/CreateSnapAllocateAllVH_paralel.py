@@ -1,6 +1,8 @@
+# DEPRECATED
+
 import ipaddress
 from modules.SIOHardwareHandler.main_classes import MDM, SDS, SDC
-from modules.SIOHardwareHandler.hardware_handler import SIONodeHandler
+from modules.SIOHardwareHandler.SIO_node_handler import SIONodeHandler
 from modules.Logger import logger_init
 from modules import configuration
 from multiprocessing.dummy import Pool as ThreadPool
