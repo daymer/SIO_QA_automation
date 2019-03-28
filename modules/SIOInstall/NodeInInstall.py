@@ -70,7 +70,8 @@ class NodeInInstall(object):  # TODO: add args validation
         # HARDCODED PARAMS:!
         self.logger.debug('Searching for network A and B data passes')
         cmd_to_execute = "ip addr show | grep -v '127.0.0.1' | grep -v '" + str(self.mgmt_ip) + "' | grep 'inet ' | awk '{print $2}' | cut -d/ -f1"  # TODO: validate that all nics are present on all nodes
-        nic_list = str(self.ssh_execute(cmd_to_execute=cmd_to_execute)).splitlines()  #TODO: add nic verification
+        nics = self.ssh_execute(cmd_to_execute=cmd_to_execute)  #TODO: add nic verification
+        nic_list = (nics.get('result')).splitlines()
         if nic_list is None:
             self.logger.debug('No nics found, exiting')
             raise Exception('No nics found on node {mgmt_ip}'.format(mgmt_ip=self.mgmt_ip))

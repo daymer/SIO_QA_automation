@@ -43,6 +43,6 @@ def logging_config(integration_config: Integration, logging_mode: str= 'INFO', l
     ch.setFormatter(formatter)
     logger_inst.addHandler(ch)
     # Turning off the paramiko.transport DEBUG
-    logging.getLogger("paramiko.transport").setLevel(logging.WARNING)
+    logging.getLogger("paramiko.transport").setLevel(logging.DEBUG)
     logging.getLogger("NodeGlobal").setLevel(logging.WARNING)
     return logger_inst
