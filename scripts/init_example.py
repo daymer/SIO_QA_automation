@@ -1,5 +1,5 @@
-from modules.SIOHardwareHandler.PhysNode import PhysNode
-from modules.SIOHardwareHandler.SIOSystemHandler import SIOSystemHandler
+from modules.SIOEcoSystem.PhysNode import PhysNode
+from modules.SIOEcoSystem.SIOSystemHandler import SIOSystemHandler
 from modules.Logger import logger_init
 from modules import configuration
 
@@ -10,16 +10,17 @@ MainLogger = logger_init.logging_config(integration_config=IntegrationConfigInst
 
 MainLogger.info('Importing a live system based on MDMs')
 # Define at least 1 MDM:
-SIOSystemHandler = SIOSystemHandler(mdms=[
+SIOSystemHandler = SIOSystemHandler(sio_config=SIO_configuration, mdms=[
     PhysNode('10.234.177.29'),  # Not a real MDM, will be skipped
     PhysNode('10.234.177.30'),
     PhysNode(node_ip='10.234.177.32', pretty_name='32', user='root', password='password')
 ])
 
-
+'''
 for each_PhysNode in SIOSystemHandler.known_hosts:
-    print(each_PhysNode.hostname)
-
-result = SIOSystemHandler.system.scli.query_volume_tree(volume_name='v1')
-print(result)
-
+    MainLogger.info('Found and added to known hosts: ' + each_PhysNode.hostname)
+'''
+result_object = SIOSystemHandler.system.scli.query_vtree(volume_name='v1')
+if result_object.status is True:
+    volume_list = result_object.to_list()
+    print(volume_list)

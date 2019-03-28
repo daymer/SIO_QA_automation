@@ -1,15 +1,15 @@
 # DEPRECATED
 
 import ipaddress
-from modules.SIOHardwareHandler.NodeGlobal import MDM, SDS, SDC
-from modules.SIOHardwareHandler.SIOSystemHandler import SIOSystemHandler
+from modules.SIOEcoSystem.NodeGlobal import MDM, SDS, SDC
+from modules.SIOEcoSystem.SIOSystemHandler import SIOSystemHandler
 from modules.Logger import logger_init
 from modules import configuration
 from multiprocessing.dummy import Pool as ThreadPool
 from modules.SIOSCLI import scli
 import logging
 import itertools
-from modules.SIOHardwareHandler.DiskTools.disk_tools import get_ready_scini_device_name
+from modules.SIOEcoSystem.DiskTools.disk_tools import get_ready_scini_device_name
 from modules.IOTools.FIO import FIO
 
 SIO_configuration = configuration.SIOconfiguration()

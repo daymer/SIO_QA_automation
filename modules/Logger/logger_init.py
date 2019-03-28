@@ -46,4 +46,5 @@ def logging_config(integration_config: Integration, logging_mode: str= 'INFO', l
     logging.getLogger("paramiko.transport").setLevel(logging.WARNING)
     logging.getLogger("NodeGlobal").setLevel(logging.WARNING)
     logging.getLogger("PhysNode_ssh_execute").setLevel(logging.WARNING)
+    logging.getLogger("modules.SIOSCLI.scli").setLevel(logging.WARNING)
     return logger_inst

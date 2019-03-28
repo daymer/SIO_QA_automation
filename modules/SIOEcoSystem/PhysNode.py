@@ -27,6 +27,7 @@ class PhysNode(object):  # TODO: add args validation
         self.os_build = None
         self.os_type = None
         self.bkl_dev_list = []
+        self.SIO_system_handler = None
 
     def ssh_execute(self, cmd_to_execute: str, ssh_handle: paramiko = None) -> dict:
         if ssh_handle is None:

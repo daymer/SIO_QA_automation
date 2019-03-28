@@ -1,5 +1,5 @@
-from modules.SIOHardwareHandler.NodeGlobal import NodeGlobal
-from modules.SIOHardwareHandler.PhysNode import PhysNode
+from modules.SIOEcoSystem.NodeGlobal import NodeGlobal
+from modules.SIOEcoSystem.PhysNode import PhysNode
 
 
 class SDC(NodeGlobal):

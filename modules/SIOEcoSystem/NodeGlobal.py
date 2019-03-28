@@ -1,7 +1,7 @@
 from abc import ABCMeta
 import paramiko
 import logging
-from modules.SIOHardwareHandler.PhysNode import PhysNode
+from modules.SIOEcoSystem.PhysNode import PhysNode
 
 
 class NodeGlobal(object):  # TODO: add args validation

@@ -4,7 +4,7 @@ from modules import configuration
 from modules.SIOSCLI import scli
 from modules.Logger import logger_init
 import ipaddress
-from modules.SIOHardwareHandler.DiskTools.disk_tools import get_ready_scini_device_name
+from modules.SIOEcoSystem.DiskTools.disk_tools import get_ready_scini_device_name
 from modules.IOTools.FIO import FIO
 from multiprocessing.dummy import Pool as ThreadPool
 import logging

@@ -1,22 +1,31 @@
 import ipaddress
-from modules.SIOHardwareHandler.NodeGlobal import NodeGlobal
-from modules.SIOHardwareHandler.MDM import MDM
-from modules.SIOHardwareHandler.PhysNode import PhysNode
+from modules.SIOEcoSystem.NodeGlobal import NodeGlobal
+from modules.SIOEcoSystem.MDM import MDM
+from modules.SIOEcoSystem.PhysNode import PhysNode
 import logging
+from modules.configuration import SIOconfiguration
 
 
 class SIOSystemHandler(object):  # TODO: add parallelism into initialization
-    def __init__(self, mdms: list):
+    def __init__(self, sio_config: SIOconfiguration, mdms: list):
         self.logger = logging.getLogger('SIONodeHandler')
+        self.sio_config = sio_config
         self.current_primary_mdm = None
         # initialization, stage 1: validate MDMs, add them into MDM_list and known_hosts
-
         self.known_hosts = {}
         # query SIO in oder to get list of all nodes
         self.MDM_list = self.make_MDM_list(unverified_mdms=mdms)
         for each_mdm_host in self.MDM_list:
             self.known_hosts[each_mdm_host.phys_node] = {each_mdm_host.type: each_mdm_host}
         self.system = self.MDM_list[0]
+        self.system_mgmt_ips = self.make_system_mgmt_ips()
+
+    def make_system_mgmt_ips(self):
+        line = ''
+        for each_mdm in self.MDM_list:
+            line += str(each_mdm.mgmt_ip) + ','
+        line = line[:-1]
+        return line
 
     def make_MDM_list(self, unverified_mdms: list):
         verified_mdms = []
@@ -24,7 +33,7 @@ class SIOSystemHandler(object):  # TODO: add parallelism into initialization
             if type(each_physnode) is PhysNode:
                 if next((x for x in verified_mdms if each_physnode.hostname == x.phys_node.hostname),
                         None) is None:
-                    temp_mdm = MDM(each_physnode)
+                    temp_mdm = MDM(each_physnode, self)
                 else:
                     self.logger.error('A PhysNode with the same hostname was already added as MDM, skipping')
                     continue
