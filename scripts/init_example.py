@@ -22,5 +22,5 @@ for each_PhysNode in SIOSystemHandler.known_hosts:
 '''
 result_object = SIOSystemHandler.system.scli.query_vtree(volume_name='v1')
 if result_object.status is True:
-    volume_list = result_object.to_list()
-    print(volume_list)
+    vtree_info_list = result_object.to_list()
+    print(vtree_info_list)
