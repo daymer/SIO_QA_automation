@@ -3,7 +3,7 @@ from modules.SIOEcoSystem.SIOSystemHandler import SIOSystemHandler
 from modules.Logger import logger_init
 from modules import configuration
 from multiprocessing.dummy import Pool as ThreadPool
-import re
+
 
 SIO_configuration = configuration.SIOconfiguration()
 IntegrationConfigInstance = configuration.Integration()
@@ -20,15 +20,19 @@ value_list = [
      'password': 'password'}
 ]
 
-with ThreadPool() as pool:
+with ThreadPool(processes=3) as pool:
     mdms_PhysNode_list = pool.starmap(PhysNode, zip(value_list))
 SIOSystemHandler = SIOSystemHandler(sio_config=SIO_configuration, mdms=mdms_PhysNode_list)
 
 MainLogger.info('System imported, added: ' + str(len(SIOSystemHandler.MDM_list)) + ' MDM hosts')
 
+# NODE ADDRESSING EXAMPLE
 
-result = SIOSystemHandler.system.scli.query_properties(object_type='SYSTEM', preset='ALL')
-result_list = result.to_list()
-system_id = result_list[0]['id']
-result_dict = result.to_dict()
-print(result_dict[system_id]['VERSION_NAME'])
+for each_PhysNode in SIOSystemHandler.known_hosts:
+    MainLogger.info('Found and added to known hosts: ' + each_PhysNode.hostname)
+
+# query_vtree to list EXAMPLE
+result_object = SIOSystemHandler.system.scli.query_vtree(volume_name='v1')
+if result_object.status is True:
+    vtree_info_list = result_object.to_list()
+    print(vtree_info_list)

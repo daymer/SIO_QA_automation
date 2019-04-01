@@ -5,8 +5,19 @@ from modules.configuration import SIOconfiguration
 
 
 class PhysNode(object):  # TODO: add args validation
-    def __init__(self, node_ip: ipaddress, user: str = 'root',
+    def __init__(self, node_ip: str, user: str = 'root',
                  password: str = 'password', pretty_name: str = None):
+        if type(node_ip) == str:
+            pass
+        elif type(node_ip) == dict:
+            incoming_dict = dict(node_ip)
+            node_ip = incoming_dict['node_ip']
+            user = incoming_dict.get('user', None)
+            password = incoming_dict.get('password', None)
+            pretty_name = incoming_dict.get('pretty_name', None)
+            if user is None:
+                user = 'root'
+                password = 'password'
         self.logger = logging.getLogger("PhysNode")
         self.ssh_execute_logger = logging.getLogger("PhysNode_ssh_execute")
         self.user = user
@@ -15,6 +26,7 @@ class PhysNode(object):  # TODO: add args validation
         self.ssh = paramiko.SSHClient()
         self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         self.ssh.connect(str(node_ip), username=self.user, password=self.password)
+
         self.ip_list, self.data_nic_a, self.data_nic_b = self.get_network_data_passes()
         self.hostname = self.get_host_name()
         self.pretty_name = self.make_name(pretty_name)

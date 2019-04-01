@@ -173,7 +173,6 @@ class SCLI:
 
     def query_all(self):
         cmd_to_execute = 'scli --query_all'
-
         return self.return_result(
             self.execute(cmd_to_execute=cmd_to_execute, scli_command_name=sys._getframe().f_code.co_name))
 
@@ -204,11 +203,34 @@ class SCLI:
 
     def query_user(self, username: str = 'admin', silent_mode: bool = True):
         cmd_to_execute = 'scli --query_user --username' + username
-        result = self.execute(cmd_to_execute=cmd_to_execute)
-        if result['status'] is True:
-            return True
-        elif result['status'] is False:
-            return False
+        return self.return_result(
+            self.execute(cmd_to_execute=cmd_to_execute, scli_command_name=sys._getframe().f_code.co_name))
+
+    def query_properties(self, object_type: str = None,
+                         object_id: str = None,
+                         all_objects: bool=True,
+                         properties: list= None,
+                         preset: str=None):
+        cmd_to_execute = 'scli --query_properties'
+
+        if object_type is not None and object_id is None:
+            cmd_to_execute += ' --object_type ' + str(object_type)
+            cmd_to_execute += ' --all_objects'
+
+        elif object_id is not None and object_type is None and all_objects:
+            cmd_to_execute += ' --object_id ' + str(object_type)
+        else:
+            raise Exception
+
+        if preset is not None and properties is None:
+            cmd_to_execute += ' --preset ' + str(preset)
+        elif preset is None and properties is not None:
+            cmd_to_execute += ' --properties '
+            for each_property in properties:
+                cmd_to_execute += each_property + ','
+            cmd_to_execute = cmd_to_execute[:-1]
+        return self.return_result(
+            self.execute(cmd_to_execute=cmd_to_execute, scli_command_name=sys._getframe().f_code.co_name))
 
     class SCLIResult(object):
         def __init__(self, result: dict):
@@ -228,7 +250,7 @@ class SCLI:
             logger = logging.getLogger('SCLIResult_' + self.command)
             logger.setLevel(logging.WARNING)
             logger.debug('Starting to_list validation, result = "' + self.result + '"')
-            supported_commands = ('query_volume_tree', 'query_vtree')
+            supported_commands = ('query_volume_tree', 'query_vtree', 'query_properties')
             if self.status is False:
                 raise Exception  # TODO: add SCLIResult like "SCLIResult func cannot be used due to a faulty answer"
             if self.command not in supported_commands:
@@ -405,9 +427,61 @@ class SCLI:
                     volumes_info.append(make_volume_info_dict(each_volume))
                 vtree_info = make_vtree_info_dict(vtree_info_raw)
                 return vtree_info, volumes_info
+            elif self.command == 'query_all':
+                # currently unsupported
+                return self.result
+            elif self.command == 'query_properties':
+                properties = {}
+                result_lines = str(self.result).splitlines()
+                first_line = result_lines.pop(0)
+                # IDENTIFYING WITH OBJECT TYPE WAS REQUESTED:
+                if first_line.replace(' ', '').startswith('SYSTEM'):
+                    # SYSTEM TYPE
+                    properties.update({'id': first_line.replace('SYSTEM ', '').replace(':', '')})
+                    regex = r'\s*(\w*)\s*(.*)'
+                    line_regex = re.compile(regex)
+                    for each_line in result_lines:
+                        match = line_regex.match(each_line)
+                        if match:
+                            properties.update({match.group(1): match.group(2)})
+                    return [properties]
             else:
                 # unspecified general processing
                 return None
+
+        def to_dict(self):
+            logger = logging.getLogger('SCLIResult_' + self.command)
+            logger.setLevel(logging.WARNING)
+            logger.debug('Starting to_dict validation, result = "' + self.result + '"')
+            supported_commands = ('query_properties')
+            if self.status is False:
+                raise Exception  # TODO: add SCLIResult like "SCLIResult func cannot be used due to a faulty answer"
+            if self.command not in supported_commands:
+                raise Exception  # TODO: add SCLIResult like "this command cannot be used for this type of query"
+            elif self.command == 'query_properties':
+                properties_dict = {}
+                objects_dict = {}
+                result_lines = str(self.result).splitlines()
+                first_line = result_lines.pop(0)
+                # IDENTIFYING WITH OBJECT TYPE WAS REQUESTED:
+                if first_line.replace(' ', '').startswith('SYSTEM'):
+                    # SYSTEM TYPE
+                    system_id = first_line.replace('SYSTEM ', '').replace(':', '')
+                    regex = r'\s*(\w*)\s*(.*)'
+                    line_regex = re.compile(regex)
+                    for each_line in result_lines:
+                        match = line_regex.match(each_line)
+                        if match:
+                            properties_dict.update({match.group(1): match.group(2)})
+
+                    objects_dict.update({system_id: properties_dict})
+                    return objects_dict
+                else:
+                    raise Exception  # TODO: Other object_types are currently unsupported
+            else:
+                # unspecified general processing
+                return None
+
 
         def get_id(self):
             supported_commands = ('snapshot_volume', 'map_volume_to_sdc')
@@ -439,5 +513,4 @@ class SCLI:
             else:
                 # unspecified general processing
                 return None
-
 
