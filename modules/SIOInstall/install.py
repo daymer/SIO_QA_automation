@@ -14,6 +14,14 @@ MainLogger = logger_init.logging_config(integration_config=IntegrationConfigInst
 
 
 def install_mdm(node: NodeInInstall, build: str, path: str):
+    """
+    Installs mdm components on a server
+
+    :param node: information about the server stored in NodeInstall class
+    :param build: a string value of a build number, should be passed as x.x-x.x
+    :param path: a string value for the path where to download distributions
+    :return:
+    """
     cmd_to_execute = "wget {path}EMC-ScaleIO-mdm-{build}.el7.x86_64.rpm -nv".format(path=path, build=build)
     node.ssh_execute(cmd_to_execute=cmd_to_execute)
     if node.is_manager:
@@ -29,6 +37,14 @@ def install_mdm(node: NodeInInstall, build: str, path: str):
 
 
 def install_sds(node: NodeInInstall, build: str, path: str):
+    """
+    Installs sds components on a server
+
+    :param node: information about the server stored in NodeInstall class
+    :param build: a string value of a build number, should be passed as x.x-x.x
+    :param path: a string value for the path where to download distributions
+    :return:
+    """
     cmd_to_execute = "wget {path}EMC-ScaleIO-sds-{build}.el7.x86_64.rpm -nv".format(path=path, build=build)
     node.ssh_execute(cmd_to_execute=cmd_to_execute)
     cmd_to_execute = "rpm -i EMC-ScaleIO-sds-{build}.el7.x86_64.rpm --force".format(build=build)
@@ -38,6 +54,15 @@ def install_sds(node: NodeInInstall, build: str, path: str):
 
 
 def install_sdc(node: NodeInInstall, build: str, mdm_ips: str, path: str):
+    """
+    Installs sdc components on a server
+
+    :param node: information about the server stored in NodeInstall class
+    :param build: a string value of a build number, should be passed as x.x-x.x
+    :param mdm_ips: string of mdm ips for SDC to be added to
+    :param path: a string value for the path where to download distributions
+    :return:
+    """
     cmd_to_execute = "wget {path}EMC-ScaleIO-sdc-{build}.el7.x86_64.rpm -nv".format(path=path, build=build)
     node.ssh_execute(cmd_to_execute=cmd_to_execute)
     cmd_to_execute = "MDM_IP={mdm_ips} rpm -i EMC-ScaleIO-sdc-{build}.el7.x86_64.rpm --force".format(mdm_ips=mdm_ips,
@@ -48,6 +73,13 @@ def install_sdc(node: NodeInInstall, build: str, mdm_ips: str, path: str):
 
 
 def add_slave_mdm(master: NodeInInstall, slave: SIOSystem):
+    """
+    Adds a slave mdmd to the SIO cluster
+
+    :param master: NodeInInstall class object, contains server which is SIO cluster master for now
+    :param slave: SIOSystem class object, contains information about server, which wil be added as slave mdm
+    :return:
+    """
     cmd_to_execute = 'scli --add_standby_mdm --new_mdm_ip {data_ip} --mdm_role manager --new_mdm_' \
                      'management_ip {mgmt_ip} --new_mdm_name MDM_{mgmt_ip}'.format(data_ip=','.join(slave.data_nics),
                                                                                    mgmt_ip=str(slave.mgmt_ip))
@@ -55,12 +87,25 @@ def add_slave_mdm(master: NodeInInstall, slave: SIOSystem):
 
 
 def add_tb(master: NodeInInstall, tb: SIOSystem):
+    """
+    Adds a Tie Braker to the SIO cluster
+
+    :param master: NodeInInstall class object, contains server which is SIO cluster master for now
+    :param tb: SIOSystem class object, contains information about server, which wil be added as TB
+    :return:
+    """
     cmd_to_execute = 'scli --add_standby_mdm --new_mdm_ip {data_ip} --mdm_role tb --new_mdm_name TB_{mgmt_ip}'.format(
         data_ip=','.join(tb.data_nics), mgmt_ip=str(tb.mgmt_ip))
     master.ssh_execute(cmd_to_execute=cmd_to_execute)
 
 
 def create_cluster(nodes: list):
+    """
+    Creates a cluster from a provided list of servers
+
+    :param nodes: a list of NodeInIntall class objects
+    :return:
+    """
     for each_node in nodes:
         if each_node.is_manager:
             master = each_node
@@ -119,11 +164,27 @@ def create_cluster(nodes: list):
 
 
 def preinstall_cleanup(node: NodeInInstall):
+    """
+    wipes out SIO components and log directories
+
+    :param node: NodeInInstall object
+    :return:
+    """
     cmd_to_execute = 'service scini stop; I_AM_SURE=1 rpm -e $(rpm -qa |grep EMC); rm -rf /opt/emc/'
     node.ssh_execute(cmd_to_execute=cmd_to_execute)
 
 
 def install(nodes: list, build: str, debug: bool = True, signed: bool = False):
+    """
+     wipes out SIO components and log directories
+
+    :param nodes: list of NodeInInstall class objects
+    :param build: a string value of a build number, should be passed as x.x-x.x
+    :param debug: True if you want to install debug version
+    :param signed: True if you want to isntall signed package version
+    :return:
+    """
+
     # TODO: Change up to cluster creation to use gevents
     cluster_mode = 0
     build_list = list(build)
@@ -166,6 +227,15 @@ def install(nodes: list, build: str, debug: bool = True, signed: bool = False):
 
 
 def auto_install(ips: list, build: str, mode: int = 1):
+    """
+    This function automatically assigns roles compatible with SIO cluster creation.
+    All servers will have SDS and SDC roles installed
+
+    :param ips: list of ips where SIO components should be installed
+    :param build: a string value of a build number, should be passed as x.x-x.x
+    :param mode: select a cluster mode for SIO, correct values: 1, 3 or 5
+    :return:
+    """
     nodes = []
     for each_ip in ips:
         nodes.append(NodeInInstall(each_ip, sds=True, sdc=True))
