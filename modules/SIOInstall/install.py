@@ -1,4 +1,13 @@
-"""This module allow you to install SIO on provided server list. It allows to install normal and debug version. Allows yo use signed and unsigned packages."""
+"""
+This module allow you to install SIO on provided server list. It allows to install normal and debug version. Allows yo use signed and unsigned packages.
+Uasge:
+    Manual install:
+        Use install function and provide needed arguments to specify details for system installation.
+
+    Auto install:
+        Use auto_install with lists of ips, build and mode to install SIO system automatically on provided ip list.
+"""
+
 from modules.SIOInstall.NodeInInstall import NodeInInstall
 from modules.SIOInstall.SIOSystem import SIOSystem
 import warnings
