@@ -18,6 +18,6 @@ SIONodeHandler = SIOSystemHandler(mdms=[
 ])
 
 MDM_29 = SIONodeHandler.known_hosts['177_29']['mdm']
-
+MDM_32 = SIONodeHandler.known_hosts['32']['mdm']
 result = MDM_29.scli.query_all()
 print(result)

@@ -1,5 +1,5 @@
 """
-This module allow you to install SIO on provided server list. It allows to install normal and debug version. Allows yo use signed and unsigned packages.
+This module allows you to install SIO on provided server list. It allows to install normal and debug version. Allows yo use signed and unsigned packages.
 Uasge:
     Manual install:
         Use install function and provide needed arguments to specify details for system installation.
