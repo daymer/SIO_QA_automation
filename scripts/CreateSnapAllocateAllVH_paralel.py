@@ -25,7 +25,7 @@ SIONodeHandler = SIOSystemHandler(mdms=[
      'password': 'password'}])
 
 
-MDM1 = SIONodeHandler.known_hosts['92T-3']
+MDM1 = SIONodeHandler.KNOWN_HOSTS['92T-3']
 
 FIO_instance = FIO(ssh_handle=MDM1.ssh)
 SCLI = SCLI.SCLI(sio_config=SIO_configuration, ssh_handler=MDM1.ssh)

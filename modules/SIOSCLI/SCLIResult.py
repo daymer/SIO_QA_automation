@@ -41,138 +41,72 @@ class SCLIResultQueryProperties(SCLIResultGeneral):
         self.logger.debug('Starting to_list validation, result = "' + self.result + '"')
         if self.status is False:
             raise Exception  # TODO: add SCLIResult like "SCLIResult func cannot be used due to a faulty answer"
-        properties = {}
-        final_list = []
+
+        # IDENTIFYING WHICH OBJECT TYPE WAS REQUESTED:
         result_lines = str(self.result).splitlines()
         first_line = result_lines[0]
-        # IDENTIFYING WHICH OBJECT TYPE WAS REQUESTED:
-        if first_line.replace(' ', '').startswith('SYSTEM'):  # SYSTEM TYPE
-            result_lines.pop(0)
-            properties.update({'id': first_line.replace('SYSTEM ', '').replace(':', '')})
-            regex = r'\s*(\w*)\s*(.*)'
-            line_regex = re.compile(regex)
-            for each_line in result_lines:
+        regex = r'\s*(\w*)\s*'
+        line_regex = re.compile(regex)
+        match = line_regex.match(first_line)
+        if match:
+            requested_object_type = match.group(1)
+        else:
+            return None
+        if requested_object_type == 'No':
+            self.logger.warning('Requested properties list is empty due to no requested objects were found')
+            return []
+
+        # MAKING A LIST for requested_object_type:
+        properties = {}
+        final_list = []
+        regex = r'\s*(\w*)\s*(.*)'
+        line_regex = re.compile(regex)
+        for each_line in result_lines:
+            if each_line.replace(' ', '').startswith(requested_object_type):
+                # need to start a new dict
+                if len(properties) > 0:
+                    final_list.append(properties)
+                    properties = {}
+            else:
                 match = line_regex.match(each_line)
                 if match:
-                    properties.update({match.group(1): match.group(2)})
-            final_list.append(properties)
-            return final_list
-        elif first_line.replace(' ', '').startswith('MDM'):  # MDM TYPE
-            properties = {}
-            regex = r'\s*(\w*)\s*(.*)'
-            line_regex = re.compile(regex)
-            for each_line in result_lines:
-                if each_line.replace(' ', '').startswith('MDM'):
-                    # need to start a new dict
-                    if len(properties) > 0:
-                        final_list.append(properties)
-                        properties = {}
-                else:
-                    match = line_regex.match(each_line)
-                    if match:
-                        if len(match.group(1)) > 0 and len(match.group(2)) > 0:
-                            properties.update({match.group(1): match.group(2)})
-            final_list.append(properties)
-            return final_list
-        elif first_line.replace(' ', '').startswith('SDS'):  # SDS TYPE
-            properties = {}
-            regex = r'\s*(\w*)\s*(.*)'
-            line_regex = re.compile(regex)
-            for each_line in result_lines:
-                if each_line.replace(' ', '').startswith('SDS'):
-                    # need to start a new dict
-                    if len(properties) > 0:
-                        final_list.append(properties)
-                        properties = {}
-                else:
-                    match = line_regex.match(each_line)
-                    if match:
-                        if len(match.group(1)) > 0 and len(match.group(2)) > 0:
-                            properties.update({match.group(1): match.group(2)})
-            final_list.append(properties)
-            return final_list
-        elif first_line.replace(' ', '').startswith('SDC'):  # SDC TYPE
-            properties = {}
-            regex = r'\s*(\w*)\s*(.*)'
-            line_regex = re.compile(regex)
-            for each_line in result_lines:
-                if each_line.replace(' ', '').startswith('SDC'):
-                    # need to start a new dict
-                    if len(properties) > 0:
-                        final_list.append(properties)
-                        properties = {}
-                else:
-                    match = line_regex.match(each_line)
-                    if match:
-                        if len(match.group(1)) > 0 and len(match.group(2)) > 0:
-                            properties.update({match.group(1): match.group(2)})
-            final_list.append(properties)
-            return final_list
-        else:
-                # unspecified specific processing
-                return None
+                    if len(match.group(1)) > 0 and len(match.group(2)) > 0:
+                        properties.update({match.group(1): match.group(2)})
+        final_list.append(properties)
+        return final_list
 
     def to_dict(self):
         if self.status is False:
             raise Exception  # TODO: add SCLIResult like "SCLIResult func cannot be used due to a faulty answer"
-        properties_dict = {}
-        objects_dict = {}
-        result_lines = str(self.result).splitlines()
-        first_line = result_lines.pop(0)
-        # IDENTIFYING WHICH OBJECT TYPE WAS REQUESTED:
 
-        if first_line.replace(' ', '').startswith('SYSTEM'):  # SYSTEM TYPE
-            system_id = first_line.replace('SYSTEM ', '').replace(':', '')
-            regex = r'\s*(\w*)\s*(.*)'
-            line_regex = re.compile(regex)
-            for each_line in result_lines:
+        # IDENTIFYING WHICH OBJECT TYPE WAS REQUESTED:
+        result_lines = str(self.result).splitlines()
+        first_line = result_lines[0]
+        regex = r'\s*(\w*)\s*'
+        line_regex = re.compile(regex)
+        match = line_regex.match(first_line)
+        if match:
+            requested_object_type = match.group(1)
+        else:
+            return None
+        if requested_object_type == 'No':
+            self.logger.warning('Requested properties list is empty due to no requested objects were found')
+            return []
+
+        # MAKING A DICT for requested_object_type:
+        final_dict = {}
+        current_node_id = None
+        regex = r'\s*(\w*)\s*(.*)'
+        line_regex = re.compile(regex)
+        for each_line in result_lines:
+            if each_line.replace(' ', '').startswith(requested_object_type):
+                current_node_id = each_line.replace(requested_object_type+" ", '').replace(':', '').replace(' ', '')
+                final_dict.update({current_node_id: {}})
+            if current_node_id is not None:
                 match = line_regex.match(each_line)
                 if match:
-                    properties_dict.update({match.group(1): match.group(2)})
-
-            objects_dict.update({system_id: properties_dict})
-            return objects_dict
-        elif first_line.replace(' ', '').startswith('MDM'):
-            current_node_id = None
-            regex = r'\s*(\w*)\s*(.*)'
-            line_regex = re.compile(regex)
-            for each_line in result_lines:
-                if each_line.replace(' ', '').startswith('MDM'):
-                    current_node_id = each_line.replace('MDM ', '').replace(':', '').replace(' ', '')
-                    objects_dict.update({current_node_id: {}})
-                if current_node_id is not None:
-                    match = line_regex.match(each_line)
-                    if match:
-                        objects_dict[current_node_id].update({match.group(1): match.group(2)})
-            return objects_dict
-        elif first_line.replace(' ', '').startswith('SDS'):
-            current_node_id = None
-            regex = r'\s*(\w*)\s*(.*)'
-            line_regex = re.compile(regex)
-            for each_line in result_lines:
-                if each_line.replace(' ', '').startswith('SDS'):
-                    current_node_id = each_line.replace('SDS ', '').replace(':', '').replace(' ', '')
-                    objects_dict.update({current_node_id: {}})
-                if current_node_id is not None:
-                    match = line_regex.match(each_line)
-                    if match:
-                        objects_dict[current_node_id].update({match.group(1): match.group(2)})
-            return objects_dict
-        elif first_line.replace(' ', '').startswith('SDC'):
-            current_node_id = None
-            regex = r'\s*(\w*)\s*(.*)'
-            line_regex = re.compile(regex)
-            for each_line in result_lines:
-                if each_line.replace(' ', '').startswith('SDC'):
-                    current_node_id = each_line.replace('SDC ', '').replace(':', '').replace(' ', '')
-                    objects_dict.update({current_node_id: {}})
-                if current_node_id is not None:
-                    match = line_regex.match(each_line)
-                    if match:
-                        objects_dict[current_node_id].update({match.group(1): match.group(2)})
-            return objects_dict
-        else:
-            raise Exception  # TODO: Other object_types are currently unsupported
+                    final_dict[current_node_id].update({match.group(1): match.group(2)})
+        return final_dict
 
 
 class SCLIResultQueryVtree(SCLIResultGeneral):

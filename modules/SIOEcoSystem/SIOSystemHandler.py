@@ -7,23 +7,50 @@ from modules.configuration import SIOconfiguration
 from multiprocessing.dummy import Pool as ThreadPool
 import itertools
 
-class SIOSystemHandler(object):  # TODO: add parallelism into initialization
+
+class SIOSystemHandler(object):
+    #  SIO Sys Handler is the main object which holds latest snapshot of a SYSTEM,
+    #  it's parameters and allows to query a SYSTEM
+    #  ATTENTION: IMPORTANT PARAMETERS ARE IN UPPER CASE
+
     def __init__(self, sio_config: SIOconfiguration, mdms: list):
+        # First we need to init it, based on sio_config + at least 1 MDM
         self.logger = logging.getLogger('SIONodeHandler')
         self.sio_config = sio_config
-        self.current_primary_mdm = None
-        # initialization, stage 1: validate MDMs, add them into MDM_list and known_hosts
-        self.known_hosts = {}
-        # query SIO in oder to get list of all nodes
-        self.MDM_list = self.make_mdm_list_parallel(unverified_mdms=mdms)
-        for each_mdm_host in self.MDM_list:
-            self.known_hosts[each_mdm_host.phys_node] = {each_mdm_host.type: each_mdm_host}
-        self.system = self.MDM_list[0]
+
+        # INITIALIZATION, STEP1:
+        # 1) validate MDMs
+        # 2) initially fill self.MDM_LIST and self.KNOWN_HOSTS
+        # 3) create self.SYSTEM
+        # NOTE:
+        # The very first of MDMs will be linked as self.SYSTEM for STEP1,
+        # later it would be const replaced by a primary MDM.
+        # LIMITATION:
+        # If the first of valid MDMs in self.MDM_LIST will be connected to a different SIO system (in case of mistype or
+        # whatever, other MDMs will be excluded for SIOSystemHandler objects on step 2
+        self.KNOWN_HOSTS = {}
+        self.MDM_LIST = self.make_mdm_list_parallel(unverified_mdms=mdms)
         self.system_mgmt_ips = self.make_system_mgmt_ips()
+        for each_mdm_host in self.MDM_LIST:
+            self.KNOWN_HOSTS[each_mdm_host.phys_node] = {each_mdm_host.type: each_mdm_host}
+
+        # First of MDMs will be available as self.SYSTEM for now, later it would be const replaced by a primary MDM
+        # If the first of valid MDMs in self.MDM_LIST will be connected to a different SIO system (in case of mistype or
+        # whatever, other MDMs will be excluded for SIOSystemHandler objects on step 2
+        self.SYSTEM = self.MDM_LIST[0]
+
+        # INITIALIZATION, STEP2:
+        # 1) get info from a running SIO
+        # 2) validate existing self.KNOWN_HOSTS and self.MDM_LIST
+        # 3) fill self.SDS_LIST, self.SDC_LIST
+
+        self.current_primary_mdm = None
+        self.SDS_LIST = []
+        self.SDC_LIST = []
 
     def make_system_mgmt_ips(self):
         line = ''
-        for each_mdm in self.MDM_list:
+        for each_mdm in self.MDM_LIST:
             line += str(each_mdm.mgmt_ip) + ','
         line = line[:-1]
         return line
@@ -78,6 +105,7 @@ class SIOSystemHandler(object):  # TODO: add parallelism into initialization
         else:
             raise FailedToInitializeHardwareHandler('Not enough MDMs to initialize Hardware Handler instance',
                                                     ['issue:', 'less than 1 valid MDM provided'])
+
 
 class SIONodeHandlerException(Exception):
     def __init__(self, message, arguments):

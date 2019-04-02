@@ -218,6 +218,39 @@ class SCLI:
                          all_objects: bool=True,
                          properties: list= None,
                          preset: str=None):
+        '''
+        Usage: scli --query_properties --object_type <TYPE> (--object_id <ID> | --all_objects) (--properties <PROPS> | --preset <PRESET>) [--group_by_property]
+        Description: Queries any set of properties on any set of objects of the specified type
+
+        Note: Use 'scli --query_properties --object_type <TYPE>' with one of the valid types, to get detailed presets and properties options
+              Use 'scli --query_properties --display_property_options' to get detailed property options grouped by object type
+
+        Parameters:
+        --object_type <TYPE>                The object type to query. One of the following:
+                                            SYSTEM
+                                            PROTECTION_DOMAIN
+                                            STORAGE_POOL
+                                            FAULT_SET
+                                            SDS
+                                            SDC
+                                            VOLUME
+                                            DEVICE
+                                            VTREE
+                                            MDM
+                                            SP_SDS
+                                            ACCELERATION_POOL
+                                            SNAPSHOT_POLICY
+        --object_id <ID>                    A comma-separated list of object IDs to query
+                                            They should all be objects of the specified type
+        --all_objects                       Query all objects of the specified type
+        --properties <PROPS>                A comma-separated list of properties to query
+                                            Use 'scli --query_properties --object_type <TYPE>' to get the list of available properties
+        --preset <PRESET>                   A predefined set of properties to query
+                                            Use 'scli --query_properties --object_type <TYPE>' to get the list of available presets
+        --group_by_property                 Group results by property type rather than the default by object
+        --display_property_options          Display all available properties grouped by object type
+        '''
+
         cmd_to_execute = 'scli --query_properties'
         if object_type is not None and object_id is None:
             cmd_to_execute += ' --object_type ' + str(object_type)
