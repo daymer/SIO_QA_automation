@@ -14,6 +14,7 @@ class NodeInInstall(object):  # TODO: add args validation
         self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         self.ssh.connect(str(node_ip), username=self.user, password=self.password)
         self.data_nics = self.get_network_data_passes()
+        self.data_nic_a = self.get_network_data_passes()[0]
         self.hostname = self.get_host_name()
         self.pretty_name = self.make_name(pretty_name)
         self.is_mdm = mdm

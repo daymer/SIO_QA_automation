@@ -14,11 +14,14 @@ import warnings
 import logging
 from modules.Logger import logger_init
 from modules import configuration
+import datetime
+import concurrent.futures
+from concurrent.futures import ThreadPoolExecutor
 
 # Suppressing DeprecationWarnings
 warnings.filterwarnings("ignore")
 IntegrationConfigInstance = configuration.Integration()
-MainLogger = logger_init.logging_config(integration_config=IntegrationConfigInstance, logging_mode='DEBUG',
+MainLogger = logger_init.logging_config(integration_config=IntegrationConfigInstance, logging_mode='INFO',
                                         log_to_file=False, executable_path=__file__)
 
 
@@ -31,54 +34,50 @@ def install_mdm(node: NodeInInstall, build: str, path: str):
     :param path: a string value for the path where to download distributions
     :return:
     """
-    cmd_to_execute = "wget {path}EMC-ScaleIO-mdm-{build}.el7.x86_64.rpm -nv".format(path=path, build=build)
-    node.ssh_execute(cmd_to_execute=cmd_to_execute)
+    command_list = []
+    command_list.append("wget {path}EMC-ScaleIO-mdm-{build}.el7.x86_64.rpm -nv".format(path=path, build=build))
     if node.is_manager:
-        cmd_to_execute = "MDM_ROLE_IS_MANAGER=1 rpm -i EMC-ScaleIO-mdm-{build}.el7.x86_64.rpm".format(build=build)
+        command_list.append("MDM_ROLE_IS_MANAGER=1 rpm -i EMC-ScaleIO-mdm-{build}.el7.x86_64.rpm".format(build=build))
     else:
-        cmd_to_execute = "MDM_ROLE_IS_MANAGER=0 rpm -i EMC-ScaleIO-mdm-{build}.el7.x86_64.rpm".format(build=build)
-    node.ssh_execute(cmd_to_execute=cmd_to_execute)
-    cmd_to_execute = "echo -e '\\user session hard timeout secs=2592000\\user session timeout secs=2592000' >> " \
-                     "/opt/emc/scaleio/mdm/cfg/conf.txt; pkill mdm"
-    node.ssh_execute(cmd_to_execute=cmd_to_execute)
-    cmd_to_execute = "rm -rf EMC*".format(build=build)
-    node.ssh_execute(cmd_to_execute=cmd_to_execute)
+        command_list.append("MDM_ROLE_IS_MANAGER=0 rpm -i EMC-ScaleIO-mdm-{build}.el7.x86_64.rpm".format(build=build))
+    command_list.append("echo -e '\\user session hard timeout secs=2592000\\user session timeout secs=2592000' >> "
+                        "/opt/emc/scaleio/mdm/cfg/conf.txt; pkill mdm")
+    command_list.append("rm -rf EMC*")
+    return command_list
 
 
-def install_sds(node: NodeInInstall, build: str, path: str):
+def install_sds(build: str, path: str):
     """
     Installs sds components on a server
 
-    :param node: information about the server stored in NodeInstall class
     :param build: a string value of a build number, should be passed as x.x-x.x
     :param path: a string value for the path where to download distributions
     :return:
     """
-    cmd_to_execute = "wget {path}EMC-ScaleIO-sds-{build}.el7.x86_64.rpm -nv".format(path=path, build=build)
-    node.ssh_execute(cmd_to_execute=cmd_to_execute)
-    cmd_to_execute = "rpm -i EMC-ScaleIO-sds-{build}.el7.x86_64.rpm --force".format(build=build)
-    node.ssh_execute(cmd_to_execute=cmd_to_execute)
-    cmd_to_execute = "rm -rf EMC*".format(build=build)
-    node.ssh_execute(cmd_to_execute=cmd_to_execute)
+    command_list = []
+    #node.logger.info('Starting SDS install task for {ip}'.format(str(node.mgmt_ip)))
+    command_list.append("wget {path}EMC-ScaleIO-sds-{build}.el7.x86_64.rpm -nv".format(path=path, build=build))
+    command_list.append("rpm -i EMC-ScaleIO-sds-{build}.el7.x86_64.rpm --force".format(build=build))
+    command_list.append("rm -rf EMC*")
+    return command_list
 
 
-def install_sdc(node: NodeInInstall, build: str, mdm_ips: str, path: str):
+def install_sdc(build: str, mdm_ips: str, path: str):
     """
     Installs sdc components on a server
 
-    :param node: information about the server stored in NodeInstall class
     :param build: a string value of a build number, should be passed as x.x-x.x
     :param mdm_ips: string of mdm ips for SDC to be added to
     :param path: a string value for the path where to download distributions
     :return:
     """
-    cmd_to_execute = "wget {path}EMC-ScaleIO-sdc-{build}.el7.x86_64.rpm -nv".format(path=path, build=build)
-    node.ssh_execute(cmd_to_execute=cmd_to_execute)
-    cmd_to_execute = "MDM_IP={mdm_ips} rpm -i EMC-ScaleIO-sdc-{build}.el7.x86_64.rpm --force".format(mdm_ips=mdm_ips,
-                                                                                                     build=build)
-    node.ssh_execute(cmd_to_execute=cmd_to_execute)
-    cmd_to_execute = "rm -rf EMC*".format(build=build)
-    node.ssh_execute(cmd_to_execute=cmd_to_execute)
+    command_list = []
+    #node.logger.info('Starting SDC install task for {ip}'.format(str(node.mgmt_ip)))
+    command_list.append("wget {path}EMC-ScaleIO-sdc-{build}.el7.x86_64.rpm -nv".format(path=path, build=build))
+    command_list.append("MDM_IP={mdm_ips} rpm -i EMC-ScaleIO-sdc-{build}.el7.x86_64.rpm --force".format(mdm_ips=mdm_ips,
+                                                                                                        build=build))
+    command_list.append("rm -rf EMC*")
+    return command_list
 
 
 def add_slave_mdm(master: NodeInInstall, slave: SIOSystem):
@@ -172,7 +171,12 @@ def create_cluster(nodes: list):
         master.ssh_execute(cmd_to_execute=cmd_to_execute)
 
 
-def preinstall_cleanup(node: NodeInInstall):
+def run_ssh_command(node: NodeInInstall, command_list: list):
+    for each_command in command_list:
+        node.ssh_execute(cmd_to_execute=each_command)
+
+
+def preinstall_cleanup():
     """
     wipes out SIO components and log directories
 
@@ -180,7 +184,7 @@ def preinstall_cleanup(node: NodeInInstall):
     :return:
     """
     cmd_to_execute = 'service scini stop; I_AM_SURE=1 rpm -e $(rpm -qa |grep EMC); rm -rf /opt/emc/'
-    node.ssh_execute(cmd_to_execute=cmd_to_execute)
+    return cmd_to_execute
 
 
 def install(nodes: list, build: str, debug: bool = True, signed: bool = False):
@@ -193,8 +197,9 @@ def install(nodes: list, build: str, debug: bool = True, signed: bool = False):
     :param signed: True if you want to isntall signed package version
     :return:
     """
-
-    # TODO: Change up to cluster creation to use gevents
+    MAX_WORKERS = 8
+    executor = ThreadPoolExecutor(max_workers=MAX_WORKERS)
+    fs = []
     cluster_mode = 0
     build_list = list(build)
     build_list = [char.replace('-', '.') for char in build_list]
@@ -207,21 +212,23 @@ def install(nodes: list, build: str, debug: bool = True, signed: bool = False):
     if signed:
         path += 'SIGNED/'
     mdm_ip_list = []
+    nodes_commands = {}
     for each_node in nodes:
-        preinstall_cleanup(each_node)
+        nodes_commands[each_node] = [preinstall_cleanup()]
         if each_node.is_mdm:
-            install_mdm(each_node, build, path)
-            mdm_ip_list.append(','.join(map(str, each_node.data_nics)))
+            nodes_commands[each_node] += install_mdm(each_node, build, path)
+            mdm_ip_list.append(str(each_node.data_nic_a))
             cluster_mode += 1
     for each_node in nodes:
         if each_node.is_sds:
-            install_sds(each_node, build, path)
-            each_node.logger.info('sds installed on {ip}'.format(ip=each_node.mgmt_ip))
+            nodes_commands[each_node] += install_sds(build, path)
         if each_node.is_sdc:
             mdm_ips = ','.join(mdm_ip_list)
-            install_sdc(each_node, build, mdm_ips, path)
+            nodes_commands[each_node] += install_sdc(build, mdm_ips, path)
         if (each_node.is_sdc and each_node.is_mdm and each_node.is_sds) is False:
             each_node.logger.info('Why did you add node {mgmt_ip} then?!'.format(mgmt_ip=each_node.mgmt_ip))
+        fs.append(executor.submit(run_ssh_command, each_node, nodes_commands[each_node]))
+    concurrent.futures.wait(fs, timeout=None, return_when='ALL_COMPLETED')
     if (cluster_mode != 1) and (cluster_mode != 3) and (cluster_mode != 5):
         if cluster_mode == 4:
             logger.info('Incorrect amount of mdms: {node_amount}, creating 3_node cluster'.format(
@@ -233,6 +240,71 @@ def install(nodes: list, build: str, debug: bool = True, signed: bool = False):
             logger.info(
                 'Incorrect amount of mdms: {node_amount}, creating 1_node cluster'.format(node_amount=cluster_mode))
     create_cluster(nodes)
+
+
+def old_install(nodes: list, build: str, debug: bool = True, signed: bool = False):
+    """
+     wipes out SIO components and log directories
+
+    :param nodes: list of NodeInInstall class objects
+    :param build: a string value of a build number, should be passed as x.x-x.x
+    :param debug: True if you want to install debug version
+    :param signed: True if you want to isntall signed package version
+    :return:
+    """
+
+    # TODO: Change up to cluster creation to use gevents
+    MAX_WORKERS = 8
+    executor = ThreadPoolExecutor(max_workers=MAX_WORKERS)
+    start_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    cluster_mode = 0
+    build_list = list(build)
+    build_list = [char.replace('-', '.') for char in build_list]
+    if debug:
+        path = 'http://vm-jenkins.lss.emc.com/sw_dev/Artifacts/Build-All-OEL7/{build}/debug/'.format(
+            build=(''.join(build_list)))
+    else:
+        path = 'http://vm-jenkins.lss.emc.com/sw_dev/Artifacts/Build-All-OEL7/{build}/release/'.format(
+            build=(''.join(build_list)))
+    if signed:
+        path += 'SIGNED/'
+    mdm_ip_list = []
+    fs = []
+    for each_node in nodes:
+        with ThreadPoolExecutor(max_workers=MAX_WORKERS) as execute:
+            execute.submit(preinstall_cleanup, each_node)
+    for each_node in nodes:
+        if each_node.is_mdm:
+            fs.append(executor.submit(install_mdm, each_node, build, path))
+            mdm_ip_list.append(str(each_node.data_nic_a))
+            cluster_mode += 1
+            each_node.logger.info('Installing mdm on {ip}'.format(ip=each_node.mgmt_ip))
+    for each_node in nodes:
+        if each_node.is_sds:
+            fs.append(executor.submit(install_sds, each_node, build, path))
+            each_node.logger.info('sds installed on {ip}'.format(ip=each_node.mgmt_ip))
+        if each_node.is_sdc:
+            mdm_ips = ','.join(mdm_ip_list)
+            fs.append(executor.submit(install_sdc, each_node, build, mdm_ips, path))
+            each_node.logger.info(
+                'added sdc on ip: {ip}, mdm_ips are: {mdm_ips}'.format(ip=each_node.mgmt_ip, mdm_ips=mdm_ips))
+        if (each_node.is_sdc and each_node.is_mdm and each_node.is_sds) is False:
+            each_node.logger.info('Why did you add node {mgmt_ip} then?!'.format(mgmt_ip=each_node.mgmt_ip))
+    logger.info('WAITING FOR THREADS TO FINISH!')
+    concurrent.futures.wait(fs, timeout=None, return_when='ALL_COMPLETED')
+    end_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    if (cluster_mode != 1) and (cluster_mode != 3) and (cluster_mode != 5):
+        if cluster_mode == 4:
+            logger.info('Incorrect amount of mdms: {node_amount}, creating 3_node cluster'.format(
+                node_amount=cluster_mode))
+        elif cluster_mode > 5:
+            logger.info('Incorrect amount of mdms: {node_amount}, creating 5_node cluster'.format(
+                node_amount=cluster_mode))
+        else:
+            logger.info(
+                'Incorrect amount of mdms: {node_amount}, creating 1_node cluster'.format(node_amount=cluster_mode))
+    create_cluster(nodes)
+    logger.info('Start time: {start}, \n end time: {end}'.format(start=start_time, end=end_time))
 
 
 def auto_install(ips: list, build: str, mode: int = 1):
@@ -266,20 +338,21 @@ def auto_install(ips: list, build: str, mode: int = 1):
 
 logger = logging.getLogger()
 nodelist = [
-         NodeInInstall('10.234.210.125', manager=True, mdm=True, sds=True, sdc=True),
-         NodeInInstall('10.234.210.126', manager=True, mdm=True, sds=True, sdc=True),
-         NodeInInstall('10.234.210.127', manager=True, mdm=True, sds=True, sdc=True),
-         NodeInInstall('10.234.210.128', mdm=True, sds=True, sdc=True),
-         NodeInInstall('10.234.210.103', mdm=True, sds=True, sdc=True)]
+         NodeInInstall('10.139.218.26', manager=True, mdm=True, sds=True, sdc=True),
+         NodeInInstall('10.139.218.27', manager=True, mdm=True, sds=True, sdc=True),
+         NodeInInstall('10.139.218.28', manager=True, mdm=True, sds=True, sdc=True),
+         NodeInInstall('10.139.218.29', mdm=True, sds=True, sdc=True),
+         NodeInInstall('10.139.218.30', mdm=True, sds=True, sdc=True)]
 
 ip_list = [
-    '10.234.210.125',
-    '10.234.210.126',
-    '10.234.210.127',
-    '10.234.210.128',
-    '10.234.210.103']
+    '10.139.218.26',
+    '10.139.218.27',
+    '10.139.218.28',
+    '10.139.218.29',
+    '10.139.218.30']
 
 
 siobuild = "3.0-0.769"
-auto_install(ip_list, siobuild, 5)
-# install(list_of_nodes, siobuild)
+#auto_install(ip_list, siobuild, 5)
+#install(list_of_nodes, siobuild)
+install(nodelist, siobuild)
