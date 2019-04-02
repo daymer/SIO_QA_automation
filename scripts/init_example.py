@@ -26,9 +26,15 @@ SIOSystemHandler = SIOSystemHandler(sio_config=SIO_configuration, mdms=mdms_Phys
 
 MainLogger.info('System imported, added: ' + str(len(SIOSystemHandler.MDM_list)) + ' MDM hosts')
 
-
+'''
 result = SIOSystemHandler.system.scli.query_properties(object_type='SYSTEM', preset='ALL')
 result_list = result.to_list()
 system_id = result_list[0]['id']
-result_dict = result.to_dict()
+result_dict = result.to_dict()rt
 print(result_dict[system_id]['VERSION_NAME'])
+'''
+
+result = SIOSystemHandler.system.scli.query_properties(object_type='SDS', preset='ALL')
+
+result_list = result.to_list()
+print(result_list)

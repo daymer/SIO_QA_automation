@@ -1,12 +1,12 @@
 # DEPRECATED
 
 from modules import configuration
-from modules.SIOSCLI import scli
+from modules.SIOSCLI import SCLI
 
 SIO_configuration = configuration.SIOconfiguration()
-SCLI = scli.SCLI(sio_config=SIO_configuration)
-SIOInfraHandler = scli.SIOInfraHandler()
-SIOInfraGather = scli.SIOInfraGather(SCLI, SIOInfraHandler)
+SCLI = SCLI.SCLI(sio_config=SIO_configuration)
+SIOInfraHandler = SCLI.SIOInfraHandler()
+SIOInfraGather = SCLI.SIOInfraGather(SCLI, SIOInfraHandler)
 SCLI.login()
 
 list_volumes = SIOInfraGather.get_vtree_list(volume_name='vol_1')

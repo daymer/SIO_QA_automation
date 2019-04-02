@@ -6,7 +6,7 @@ from modules.SIOEcoSystem.SIOSystemHandler import SIOSystemHandler
 from modules.Logger import logger_init
 from modules import configuration
 from multiprocessing.dummy import Pool as ThreadPool
-from modules.SIOSCLI import scli
+from modules.SIOSCLI import SCLI
 import logging
 import itertools
 from modules.SIOEcoSystem.DiskTools.disk_tools import get_ready_scini_device_name
@@ -28,7 +28,7 @@ SIONodeHandler = SIOSystemHandler(mdms=[
 MDM1 = SIONodeHandler.known_hosts['92T-3']
 
 FIO_instance = FIO(ssh_handle=MDM1.ssh)
-SCLI = scli.SCLI(sio_config=SIO_configuration, ssh_handler=MDM1.ssh)
+SCLI = SCLI.SCLI(sio_config=SIO_configuration, ssh_handler=MDM1.ssh)
 
 
 pool = ThreadPool()

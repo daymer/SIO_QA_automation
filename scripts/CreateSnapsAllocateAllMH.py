@@ -1,7 +1,7 @@
 # DEPRECATED
 
 from modules import configuration
-from modules.SIOSCLI import scli
+from modules.SIOSCLI import SCLI
 from modules.Logger import logger_init
 import ipaddress
 from modules.SIOEcoSystem.DiskTools.disk_tools import get_ready_scini_device_name
@@ -12,9 +12,9 @@ import itertools
 
 SIO_configuration = configuration.SIOconfiguration()
 FIO_instance = FIO('10.139.218.26')
-SCLI = scli.SCLI(sio_config=SIO_configuration)
-SIOInfraHandler = scli.SIOInfraHandler()
-SIOInfraGather = scli.SIOInfraGather(SCLI, SIOInfraHandler)
+SCLI = SCLI.SCLI(sio_config=SIO_configuration)
+SIOInfraHandler = SCLI.SIOInfraHandler()
+SIOInfraGather = SCLI.SIOInfraGather(SCLI, SIOInfraHandler)
 IntegrationConfigInstance = configuration.Integration()
 
 

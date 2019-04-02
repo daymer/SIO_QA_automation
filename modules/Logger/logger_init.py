@@ -42,10 +42,13 @@ def logging_config(integration_config: Integration, logging_mode: str= 'INFO', l
     ch.setLevel(logging_mode)
     ch.setFormatter(formatter)
     logger_inst.addHandler(ch)
-    # Turning off the paramiko.transport DEBUG
+    # Turning off the logging for some modules
     logging.getLogger("paramiko.transport").setLevel(logging.WARNING)
+    logging.getLogger("paramiko").setLevel(logging.WARNING)
     logging.getLogger("NodeGlobal").setLevel(logging.WARNING)
     logging.getLogger("PhysNode").setLevel(logging.WARNING)
     logging.getLogger("PhysNode_ssh_execute").setLevel(logging.WARNING)
-    logging.getLogger("modules.SIOSCLI.scli").setLevel(logging.WARNING)
+    logging.getLogger("modules.SIOSCLI.SCLI").setLevel(logging.WARNING)
+    logging.getLogger('SCLIResult').setLevel(logging.WARNING)
+
     return logger_inst

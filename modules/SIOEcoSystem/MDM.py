@@ -2,7 +2,7 @@ import modules.SIOEcoSystem.exeptions as main_classes_exeptions
 from modules.SIOEcoSystem.NodeGlobal import NodeGlobal
 from modules.SIOEcoSystem.PhysNode import PhysNode
 #from modules.SIOEcoSystem.SIOSystemHandler import SIOSystemHandler
-from modules.SIOSCLI import scli
+from modules.SIOSCLI import SCLI
 
 
 class MDM(NodeGlobal):
@@ -12,7 +12,7 @@ class MDM(NodeGlobal):
             self.installation_package = self.get_mdm_version()
             self.type = 'mdm'
             self.sio_system_handler = sio_system_handler
-            self.scli = scli.SCLI(sio_config=self.sio_system_handler.sio_config,
+            self.scli = SCLI.SCLI(sio_config=self.sio_system_handler.sio_config,
                                   ssh_handler=self.ssh,
                                   sio_system_handler=sio_system_handler)
             self.log_own_creation()
