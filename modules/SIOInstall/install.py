@@ -21,7 +21,7 @@ from concurrent.futures import ThreadPoolExecutor
 # Suppressing DeprecationWarnings
 warnings.filterwarnings("ignore")
 IntegrationConfigInstance = configuration.Integration()
-MainLogger = logger_init.logging_config(integration_config=IntegrationConfigInstance, logging_mode='DEBUG',
+MainLogger = logger_init.logging_config(integration_config=IntegrationConfigInstance, logging_mode='INFO',
                                         log_to_file=False, executable_path=__file__)
 
 
@@ -215,6 +215,7 @@ def add_sds(nodes: list, spef: bool = False) -> str:
                        "--acceleration_device_path {dax} --acceleration_pool_name accp --force_clean --i_am_sure; ".format(
                         name=each_node.pretty_name, ip=','.join(each_node.data_nics), devices=','.join(each_node.ssds),
                         dax=','.join(each_node.dax))
+                cmd += add_sds_device(nodes, 'hdd', 'sp1')
             else:
                 if sp == 'sp1':
                     cmd += "scli --add_sds --sds_ip {ip} --device_path {hdds} --storage_pool_name {sp} " \
@@ -334,7 +335,7 @@ def install(nodes: list, build: str, debug: bool = True, signed: bool = False):
     create_cluster(nodes)
 
 
-def auto_install(ips: list, build: str, mode: int = 1):
+def auto_install(ips: list, build: str, mode: int = 1, debug: bool = True, signed: bool = False):
     """
     This function automatically assigns roles compatible with SIO cluster creation.
     All servers will have SDS and SDC roles installed
@@ -342,6 +343,8 @@ def auto_install(ips: list, build: str, mode: int = 1):
     :param ips: list of ips where SIO components should be installed
     :param build: a string value of a build number, should be passed as x.x-x.x
     :param mode: select a cluster mode for SIO, correct values: 1, 3 or 5
+    :param debug: True if you want to install debug version
+    :param signed: True if you want to isntall signed package version
     :return:
     """
     nodes = []
@@ -360,7 +363,7 @@ def auto_install(ips: list, build: str, mode: int = 1):
         nodes[i].is_manager = True
     for i in range(num_of_mdms):
         nodes[i].is_mdm = True
-    install(nodes, build)
+    install(nodes, build, debug, signed)
 
 
 def validate(nodes: list):
@@ -410,7 +413,14 @@ nods = [
          NodeInInstall('10.139.218.28', manager=True, mdm=True, sds=True, sdc=True),
          NodeInInstall('10.139.218.29', mdm=True, sds=True, sdc=True),
          NodeInInstall('10.139.218.30', mdm=True, sds=True, sdc=True)]
-
+"""
+nods = [
+         NodeInInstall('10.234.179.90', manager=True, sds=True, sdc=True),
+         NodeInInstall('10.234.179.91', manager=True, sds=True, sdc=True),
+         NodeInInstall('10.234.179.92', manager=True, mdm=True, sds=True, sdc=True),
+         NodeInInstall('10.234.179.93', mdm=True, sds=True, sdc=True),
+         NodeInInstall('10.234.179.94', mdm=True, sds=True, sdc=True)]
+"""
 ip_list = [
     '10.139.218.26',
     '10.139.218.27',
@@ -419,8 +429,8 @@ ip_list = [
     '10.139.218.30']
 
 
-siobuild = "3.0-0.769"
-#auto_install(ip_list, siobuild, 5)
+siobuild = "3.0-100.111"
+auto_install(ip_list, siobuild, 5, True, True)
 #install(list_of_nodes, siobuild)
-nods = validate(nods)
-install(nods, siobuild)
+#nods = validate(nods)
+#install(nods, siobuild)
