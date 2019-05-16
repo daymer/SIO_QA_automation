@@ -428,8 +428,13 @@ ip_list = [
     '10.139.218.29',
     '10.139.218.30']
 
+#ip_list = [
+#'10.234.214.123',
+#'10.234.214.124',
+#'10.234.214.125']
 
-siobuild = "3.0-100.111"
+
+siobuild = "3.0-100.124"
 auto_install(ip_list, siobuild, 5, True, True)
 #install(list_of_nodes, siobuild)
 #nods = validate(nods)

@@ -2,7 +2,7 @@ import ipaddress
 import paramiko
 import logging
 import re
-import time
+import datetime
 
 
 class NodeInInstall(object):  # TODO: add args validation
@@ -11,6 +11,7 @@ class NodeInInstall(object):  # TODO: add args validation
         self.logger = logging.getLogger("PhysNode")
         self.user = user
         self.password = password
+        self.set_time()
         self.mgmt_ip = ipaddress.ip_address(node_ip)
         self.ssh = paramiko.SSHClient()
         self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -88,6 +89,16 @@ class NodeInInstall(object):  # TODO: add args validation
         elif result['status'] is False:
             # RAISING ERRORS
             raise Exception
+
+    def set_time(self):
+        """
+        This function sets the same time on all servers
+
+        """
+        self.logger.debug('Setting date time on server')
+        cmd_to_execute = "timedatectl set-timezone 'Asia/Jerusalem'; timedatectl set-time " + \
+                         datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        self.ssh_execute(cmd_to_execute=cmd_to_execute)
 
     def get_network_data_passes(self):
         """
